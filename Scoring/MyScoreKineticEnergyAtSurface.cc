@@ -35,7 +35,7 @@ G4bool MyScoreKineticEnergyAtSurface::ProcessHits(G4Step* aStep,G4TouchableHisto
 	G4TouchableHandle theTouchable = aStep->GetPreStepPoint()->GetTouchableHandle();
 	if (aStep->GetPreStepPoint()->GetStepStatus() == fGeomBoundary) {
 		weight = 1.;
-		weight *= aStep->GetPreStepPoint()->GetWeight();
+		weight *= aStep->GetPreStepPoint()->GetKineticEnergy();
 
 		if ( weight > 0. ) {
 			ResolveSolid(aStep);

@@ -1,0 +1,63 @@
+s:Ge/World/Material  = "Vacuum"
+d:Ge/World/HLX       = 2.0 m
+d:Ge/World/HLY       = 2.0 m
+d:Ge/World/HLZ       = 2.0 m
+b:Ge/World/Invisible = "True"
+
+s:Ge/Phantom/Type     = "TsBox"
+s:Ge/Phantom/Parent   = "World"
+s:Ge/Phantom/Material = "G4_WATER"
+d:Ge/Phantom/HLX      = 5 cm
+d:Ge/Phantom/HLY      = 5 cm
+d:Ge/Phantom/HLZ      = 5 cm
+d:Ge/Phantom/TransZ   = -5. cm
+i:Ge/Phantom/XBins = 1
+i:Ge/Phantom/YBins = 1
+i:Ge/Phantom/ZBins = 50
+s:Ge/Phantom/Color    = "blue"
+
+
+s:Sc/yDyStar/Quantity    = "AmorphousTrack"
+s:Sc/yDyStar/Component   = "Phantom"
+s:Sc/yDyStar/OutputFile  = "yDyStarOutputFile"
+s:Sc/yDyStar/OutputType  = "csv"
+s:Sc/yDyStar/LUTFolder = "/Applications/topas/topas_extensions/Scoring/AmorphousTrack/LUT_yDyStar" #CHANGE HERE!!!!
+i:Sc/yDyStar/HistoCountsLowerLimit = 10 #threshold on the minimum number of hisories in the voxel
+b:Sc/yDyStar/OutputToConsole = "FALSE"
+b:Sc/yDyStar/Visualize = "TRUE"
+s:Sc/yDyStar/IfOutputFileAlreadyExists = "Increment" # Exit, Overwrite or Increment
+
+
+#s:Gr/ViewA/Type                            = "OpenGL"
+#i:Gr/ViewA/WindowSizeX                      = 900
+#i:Gr/ViewA/WindowSizeY                      = 900
+#d:Gr/ViewA/Theta                            = 55 deg
+#d:Gr/ViewA/Phi                              = 20 deg
+#s:Gr/ViewA/Projection                       = "Perspective"
+#d:Gr/ViewA/PerspectiveAngle                 = 30 deg
+#u:Gr/ViewA/Zoom                             = 1.3
+#b:Gr/ViewA/HiddenLineRemovalForTrajectories = "True"
+
+
+s:So/Example/Type                     = "Beam"
+s:So/Example/Component                = "BeamPosition"
+s:So/Example/BeamParticle             = "proton"
+d:So/Example/BeamEnergy               = 70 MeV
+u:So/Example/BeamEnergySpread         = 0.01
+s:So/Example/BeamPositionDistribution = "Gaussian"
+s:So/Example/BeamPositionCutoffShape  = "Ellipse"
+d:So/Example/BeamPositionCutoffX      = 10. cm
+d:So/Example/BeamPositionCutoffY      = 10. cm
+d:So/Example/BeamPositionSpreadX      = 0.065 cm
+d:So/Example/BeamPositionSpreadY      = 0.065 cm
+s:So/Example/BeamAngularDistribution  = "Gaussian"
+d:So/Example/BeamAngularCutoffX       = 90. deg
+d:So/Example/BeamAngularCutoffY       = 90. deg
+d:So/Example/BeamAngularSpreadX       = 0.0032 rad
+d:So/Example/BeamAngularSpreadY       = 0.0032 rad
+i:So/Example/NumberOfHistoriesInRun   = 100000
+i:Ts/ShowHistoryCountAtInterval =  10000
+
+i:Ts/NumberOfThreads = 0
+
+#b:Ts/PauseBeforeQuit = "True"

@@ -1,4 +1,4 @@
-// Scorer for MonasTrack
+// Scorer for AmorphousTrack
 //
 // ********************************************************************
 // *                                                                  *
@@ -11,27 +11,26 @@
 // ********************************************************************
 //
 
-#include "TsTrackerHit_Monas.hh"
-#include "MyScorerMonasTrack.hh"
+#include "TsTrackerHit_AT.hh"
+#include "MyScoreAmorphousTrack.hh"
 #include<vector>
 #include<fstream>
 #include <unordered_map>
-#include <string>
-
+#include<string>
 
 #include "G4ParticleTable.hh"
 #include "G4ParticleDefinition.hh"
 #include "G4EmCalculator.hh"
 #include "G4UIcommand.hh"
 
-MyScorerMonasTrack::MyScorerMonasTrack(TsParameterManager* pM, TsMaterialManager* mM, TsGeometryManager* gM, TsScoringManager* scM, TsExtensionManager* eM,
+MyScoreAmorphousTrack::MyScoreAmorphousTrack(TsParameterManager* pM, TsMaterialManager* mM, TsGeometryManager* gM, TsScoringManager* scM, TsExtensionManager* eM,
 		G4String scorerName, G4String quantity, G4String outFileName, G4bool isSubScorer)
-: TsVBinnedScorer(pM, mM, gM, scM, eM, scorerName, quantity, outFileName, isSubScorer)
+	: TsVBinnedScorer(pM, mM, gM, scM, eM, scorerName, quantity, outFileName, isSubScorer)
 {
 
 	G4String lutfolder = fPm->GetStringParameter(GetFullParmName("LUTFolder"));
 	foutfilename = fPm->GetStringParameter(GetFullParmName("OutputFile"));
-
+	
 	fTypeOfTable = "zdD"; 
 	if ( fPm->ParameterExists(GetFullParmName("TypeOfLUT")) ) {
 		G4int index = fPm->GetIntegerParameter(GetFullParmName("TypeOfLUT"));
@@ -52,14 +51,9 @@ MyScorerMonasTrack::MyScorerMonasTrack(TsParameterManager* pM, TsMaterialManager
 		zEnd  =  fPm->GetUnitlessParameter(GetFullParmName("SpecificEnergyUpperLimit"));
 	}
 
-	fCountsLowerLimit = 1;
+	fCountsLowerLimit = 100;
 	if ( fPm->ParameterExists(GetFullParmName("HistoCountsLowerLimit")) ) {
 		fCountsLowerLimit  =  fPm->GetIntegerParameter(GetFullParmName("HistoCountsLowerLimit"));
-	}
-
-	fFlagOutputAfterRun = 0; //clear the vectors after each run
-	if ( fPm->ParameterExists(GetFullParmName("OutputAfterRun")) ) {
-		fFlagOutputAfterRun  =  fPm->GetBooleanParameter(GetFullParmName("OutputAfterRun"));
 	}
 
 
@@ -99,10 +93,10 @@ MyScorerMonasTrack::MyScorerMonasTrack(TsParameterManager* pM, TsMaterialManager
 }
 
 
-MyScorerMonasTrack::~MyScorerMonasTrack() {;}
+MyScoreAmorphousTrack::~MyScoreAmorphousTrack() {;}
 
 
-G4bool MyScorerMonasTrack::ProcessHits(G4Step* aStep,G4TouchableHistory*)
+G4bool MyScoreAmorphousTrack::ProcessHits(G4Step* aStep,G4TouchableHistory*)
 {
 	if (!fIsActive) {
 		fSkippedWhileInactive++;
@@ -149,7 +143,7 @@ G4bool MyScorerMonasTrack::ProcessHits(G4Step* aStep,G4TouchableHistory*)
 	return true;
 }
 
-void MyScorerMonasTrack::AccumulateEvent()
+void MyScoreAmorphousTrack::AccumulateEvent()
 {
 
 
@@ -167,22 +161,24 @@ void MyScorerMonasTrack::AccumulateEvent()
 		//CALCULTAE HISTO f(z_domain)
 		std::vector<G4double> zdD(3,0.);
 		if(Z == 1) zdD = Interpolate(flut_zD.at("H"),  ekin/A, 1);
-		else if(Z == 2 ) zdD = Interpolate(flut_zD.at("He"), ekin/A, 1);
-		else if(Z == 3 ) zdD = Interpolate(flut_zD.at("Li"), ekin/A, 1);
-		else if(Z == 4 ) zdD = Interpolate(flut_zD.at("Be"), ekin/A, 1);
-		else if(Z == 5 ) zdD = Interpolate(flut_zD.at("B"),ekin/A, 1);
-		else if(Z == 6 ) zdD = Interpolate(flut_zD.at("C"),ekin/A, 1);
-		else if(Z == 7 ) zdD = Interpolate(flut_zD.at("N"),ekin/A, 1);
-		else if(Z == 8 ) zdD = Interpolate(flut_zD.at("O"),ekin/A, 1);
+		else if(Z == 2) zdD = Interpolate(flut_zD.at("He"), ekin/A, 1);
+		//else if(Z == 3) zdD = Interpolate(flut_zD.at("Li"), ekin/A, 1);
+		//else if(Z == 4) zdD = Interpolate(flut_zD.at("Be"), ekin/A, 1);
+		//else if(Z == 5) zdD = Interpolate(flut_zD.at("B"),ekin/A, 1);
+		//else if(Z == 6) zdD = Interpolate(flut_zD.at("C"),ekin/A, 1);
+		//else if(Z == 7) zdD = Interpolate(flut_zD.at("N"),ekin/A, 1);
+		//else if(Z == 8) zdD = Interpolate(flut_zD.at("O"),ekin/A, 1);
 
 
+		//Dynamically append at the end of the array if the hit belongs to a new voxel
 		if(bin_edepzD.find(index) == bin_edepzD.end())
 			bin_edepzD.insert({{index, {edep, edep*zdD[0], edep*zdD[1], edep*zdD[2]}}});
+		//If the voxel is already registered
 		else
 		{
-			(bin_edepzD.at(index))[0] += edep;
+			(bin_edepzD.at(index))[0] += edep; //denominator of the ratio sum(edep*zD)/sum(edep)
 			for(int ztype=0; ztype<3; ztype++)
-				(bin_edepzD.at(index))[ztype+1] += edep*zdD[ztype];
+				(bin_edepzD.at(index))[ztype+1] += edep*zdD[ztype]; //numerator of the ratio sum(edep*zD)/sum(edep)
 		}
 
 	}
@@ -190,6 +186,7 @@ void MyScorerMonasTrack::AccumulateEvent()
 
 
 	//Event-by-Event Histo with dose-averaged zdD
+	//AT THE MOMENT NOT USED COULD BE REMOVED TO SPEED UP
 	for (auto& x: bin_edepzD)
 	{
 
@@ -214,11 +211,11 @@ void MyScorerMonasTrack::AccumulateEvent()
 	fHitsCollection = new TsTrackerHitsCollection();
 }
 
-void MyScorerMonasTrack::AbsorbResultsFromWorkerScorer(TsVScorer* workerScorer) {
+void MyScoreAmorphousTrack::AbsorbResultsFromWorkerScorer(TsVScorer* workerScorer) {
 	TsVBinnedScorer::AbsorbResultsFromWorkerScorer(workerScorer);
 
 
-	MyScorerMonasTrack* workerMTScorer = dynamic_cast<MyScorerMonasTrack*>(workerScorer);
+	MyScoreAmorphousTrack* workerMTScorer = dynamic_cast<MyScoreAmorphousTrack*>(workerScorer);
 	std::unordered_map<int, std::vector<double>> fzdDSpectraBin_worker = workerMTScorer->fzdDSpectraBin;
 	std::unordered_map<int, std::vector<double>> fzdDDoseAverzdD_worker = workerMTScorer->fzdDDoseAverzdD;
 
@@ -244,55 +241,35 @@ void MyScorerMonasTrack::AbsorbResultsFromWorkerScorer(TsVScorer* workerScorer) 
 
 }
 
-void MyScorerMonasTrack::UserHookForEndOfRun()
+void MyScoreAmorphousTrack::UserHookForEndOfRun()
 {
-	/*
-	   G4int run = GetRunID();
-	   G4String runFileName;
-	   if(run < 10)
-	   {
-	   runFileName = foutfilename+"-000"+std::to_string(run)+".csv";
-	   }
-	   else if(run < 100)
-	   {
-	   runFileName = foutfilename+"-00"+std::to_string(run)+".csv";
-	   }
-	   else if(run < 1000)
-	   {
-	   runFileName = foutfilename+"-0"+std::to_string(run)+".csv";
-	   }
 
-	   std::ofstream outfile(runFileName.c_str());
+	/*
+	   std::ofstream outfile("prova.csv");
 	   for (auto& x: fzdDSpectraBin)
 	   {
 	   int sum = 0;
 	   for(auto bin:x.second)
 	   sum += bin;
-	   if(sum > fCountsLowerLimit)
+	   if(sum > 1)
 	   {
-	   for(int ztype=1; ztype<4; ztype++)
+	   outfile << x.first;
+	   G4cout << x.first;
+	   for(auto bin:x.second)
 	   {
-	   double DoseAveragezd =  (fzdDDoseAverzdD.at(x.first))[ztype]/ (fzdDDoseAverzdD.at(x.first))[0];
-	   outfile << x.first << ',' <<DoseAveragezd;
+	   outfile <<','<<bin;
+	   G4cout <<','<<bin;
 	   }
-	//for(auto bin:x.second)
-	//{
-	//outfile <<','<<bin;
-	//}
-	outfile << std::endl;
-	}
-	}
+	   outfile << std::endl;
+	   G4cout << std::endl;
+	   }
+	   }
 
-	outfile.close();
-
-	fzdDSpectraBin.clear();
-	fzdDDoseAverzdD.clear(); // Accumulated for all steps and events
-	*/
-
-
+	   outfile.close();
+	 */
 }
 
-void MyScorerMonasTrack::FillHisto(G4double data, std::vector<G4double> &hist)
+void MyScoreAmorphousTrack::FillHisto(G4double data, std::vector<G4double> &hist)
 {
 
 	for (int n=0;n<zBins;n++)
@@ -307,7 +284,7 @@ void MyScorerMonasTrack::FillHisto(G4double data, std::vector<G4double> &hist)
 
 
 
-std::vector<G4double> MyScorerMonasTrack::Interpolate(std::vector<std::vector<G4double>> Data, G4double x, G4bool extrapolate )
+std::vector<G4double> MyScoreAmorphousTrack::Interpolate(std::vector<std::vector<G4double>> Data, G4double x, G4bool extrapolate )
 {
 	std::vector<G4double> xData = Data[0];
 	std::vector<std::vector<G4double>> yData = {Data[1], Data[2], Data[3]};
@@ -349,11 +326,11 @@ std::vector<G4double> MyScorerMonasTrack::Interpolate(std::vector<std::vector<G4
 	return {yL0 + dydx0 * ( x - xL ), yL1 + dydx1 * ( x - xL ), yL2 + dydx2 * ( x - xL )};                                              // linear interpolation
 }
 
-void MyScorerMonasTrack::GetLUT(std::unordered_map<std::string, std::vector<std::vector<G4double>> > & lut, std::string lutfolder, std::string ztype)
+void MyScoreAmorphousTrack::GetLUT(std::unordered_map<std::string, std::vector<std::vector<G4double>> > & lut, std::string lutfolder, std::string ztype)
 {
 
-	std::vector<std::string> ListOfIons = {"H", "He", "Li", "Be", "B", "C", "N", "O"};
-	//std::vector<std::string> ListOfIons = {"H", "He"};
+	//std::vector<std::string> ListOfIons = {"H", "He", "Li", "Be", "B", "C", "N", "O"};
+	std::vector<std::string> ListOfIons = {"H", "He"};
 	for(auto ionType:ListOfIons)
 	{
 		std::string filename = lutfolder + "/LUT_"+ ionType + ".dat";
@@ -379,7 +356,7 @@ void MyScorerMonasTrack::GetLUT(std::unordered_map<std::string, std::vector<std:
 			lut_zdD.push_back(y0);
 			lut_zdS.push_back(y1);
 			lut_znD.push_back(y2);
-			G4cout << x <<'\t'<<y0<<'\t'<<y1<<'\t'<<y2<<G4endl;
+			G4cout << x <<'\t' << y0 <<'\t' <<y1 <<'\t'<<y2 << G4endl;
 		}
 		lutfile.close();
 
@@ -388,47 +365,41 @@ void MyScorerMonasTrack::GetLUT(std::unordered_map<std::string, std::vector<std:
 }
 
 
-void MyScorerMonasTrack::Output()
+void MyScoreAmorphousTrack::Output()
 {
-	G4int run = GetRunID();
-	G4String runFileName;
-	if(run < 10)
-	{
-		runFileName = foutfilename+"-000"+std::to_string(run)+".csv";
-	}
-	else if(run < 100)
-	{
-		runFileName = foutfilename+"-00"+std::to_string(run)+".csv";
-	}
-	else if(run < 1000)
-	{
-		runFileName = foutfilename+"-0"+std::to_string(run)+".csv";
-	}
-	else 
-		runFileName = foutfilename+"-"+std::to_string(run)+".csv";
 
+	G4int run = GetRunID();
+	G4String runFileName = foutfilename+'-'+std::to_string(run)+".csv";
 	std::ofstream outfile(runFileName.c_str());
-	for (auto& x: fzdDSpectraBin)
+
+	G4String runFileNameSpectra = foutfilename+'-'+std::to_string(run)+"_zdD_Spectra.csv";
+	std::ofstream outfileSpectra(runFileNameSpectra.c_str());
+	for (auto& idx:fzdDSpectraBin)
 	{
-		int sum = 0;
-		for(auto bin:x.second)
-			sum += bin;
-		if(sum > fCountsLowerLimit)
+		int TotalCounts = 0;
+		for(auto zSpectraCounts:idx.second)
+			TotalCounts += zSpectraCounts;
+
+		if(TotalCounts > fCountsLowerLimit)
 		{
+			outfile << idx.first;
 			for(int ztype=1; ztype<4; ztype++)
 			{
-				double DoseAveragezd =  (fzdDDoseAverzdD.at(x.first))[ztype]/ (fzdDDoseAverzdD.at(x.first))[0];
-				outfile << x.first << ',' <<DoseAveragezd;
+				double DoseAveragezd =  (fzdDDoseAverzdD.at(idx.first))[ztype]/ (fzdDDoseAverzdD.at(idx.first))[0];
+				outfile << ',' <<DoseAveragezd;
 			}
-			//for(auto bin:x.second)
-			//{
-			//outfile <<','<<bin;
-			//}
+
 			outfile << std::endl;
+			
+			outfileSpectra << idx.first;
+			for(auto zSpectraCounts:idx.second)
+			{
+				outfileSpectra <<','<<zSpectraCounts;
+			}
+			outfileSpectra << std::endl;
 		}
 	}
 
 	outfile.close();
-
-	if(fFlagOutputAfterRun) {fzdDSpectraBin.clear(); fzdDDoseAverzdD.clear();}
+	outfileSpectra.close();
 }
