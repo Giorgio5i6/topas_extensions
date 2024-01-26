@@ -168,13 +168,12 @@ void MyScorerMonasTrack::AccumulateEvent()
 		std::vector<G4double> zdD(3,0.);
 		if(Z == 1) zdD = Interpolate(flut_zD.at("H"),  ekin/A, 1);
 		else if(Z == 2 ) zdD = Interpolate(flut_zD.at("He"), ekin/A, 1);
-		else if(Z == 3 ) zdD = Interpolate(flut_zD.at("Li"), ekin/A, 1);
-		else if(Z == 4 ) zdD = Interpolate(flut_zD.at("Be"), ekin/A, 1);
-		else if(Z == 5 ) zdD = Interpolate(flut_zD.at("B"),ekin/A, 1);
+		//else if(Z == 3 ) zdD = Interpolate(flut_zD.at("Li"), ekin/A, 1);
+		//else if(Z == 4 ) zdD = Interpolate(flut_zD.at("Be"), ekin/A, 1);
+		//else if(Z == 5 ) zdD = Interpolate(flut_zD.at("B"),ekin/A, 1);
 		else if(Z == 6 ) zdD = Interpolate(flut_zD.at("C"),ekin/A, 1);
 		else if(Z == 7 ) zdD = Interpolate(flut_zD.at("N"),ekin/A, 1);
 		else if(Z == 8 ) zdD = Interpolate(flut_zD.at("O"),ekin/A, 1);
-
 
 		if(bin_edepzD.find(index) == bin_edepzD.end())
 			bin_edepzD.insert({{index, {edep, edep*zdD[0], edep*zdD[1], edep*zdD[2]}}});
@@ -284,7 +283,7 @@ void MyScorerMonasTrack::UserHookForEndOfRun()
 	}
 
 	outfile.close();
-
+	
 	fzdDSpectraBin.clear();
 	fzdDDoseAverzdD.clear(); // Accumulated for all steps and events
 	*/
@@ -352,8 +351,8 @@ std::vector<G4double> MyScorerMonasTrack::Interpolate(std::vector<std::vector<G4
 void MyScorerMonasTrack::GetLUT(std::unordered_map<std::string, std::vector<std::vector<G4double>> > & lut, std::string lutfolder, std::string ztype)
 {
 
-	std::vector<std::string> ListOfIons = {"H", "He", "Li", "Be", "B", "C", "N", "O"};
-	//std::vector<std::string> ListOfIons = {"H", "He"};
+	//std::vector<std::string> ListOfIons = {"H", "He", "Li", "Be", "B", "C", "N", "O"};
+	std::vector<std::string> ListOfIons = {"H", "He","C", "N", "O"};
 	for(auto ionType:ListOfIons)
 	{
 		std::string filename = lutfolder + "/LUT_"+ ionType + ".dat";
