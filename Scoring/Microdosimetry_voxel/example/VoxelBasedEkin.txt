@@ -1,0 +1,91 @@
+s:Ge/World/Material  = "Vacuum"
+d:Ge/World/HLX       = 2.0 m
+d:Ge/World/HLY       = 2.0 m
+d:Ge/World/HLZ       = 2.0 m
+b:Ge/World/Invisible = "True"
+
+s:Ge/Phantom/Type     = "TsBox"
+s:Ge/Phantom/Parent   = "World"
+s:Ge/Phantom/Material = "G4_WATER"
+d:Ge/Phantom/HLX      = 5 cm
+d:Ge/Phantom/HLY      = 5 cm
+d:Ge/Phantom/HLZ      = 20 cm
+d:Ge/Phantom/TransX   = 0 cm
+d:Ge/Phantom/TransY   = 0 cm
+d:Ge/Phantom/TransZ   = -20. cm
+i:Ge/Phantom/XBins = 1
+i:Ge/Phantom/YBins = 1
+i:Ge/Phantom/ZBins = 1
+s:Ge/Phantom/Color    = "blue"
+
+s:Ge/Bin/Type     = "TsBox"
+s:Ge/Bin/Parent   = "Phantom"
+d:Ge/Bin/HLX      = Ge/Phantom/HLX cm
+d:Ge/Bin/HLY      = Ge/Phantom/HLY cm
+d:Ge/Bin/HLZ      = 1 um
+d:Ge/Bin/ZeroDepth = Ge/Phantom/HLZ - Ge/Bin/HLZ cm
+d:Ge/Bin/BinDepth = 5 cm
+d:Ge/Bin/TransX = 0 cm
+d:Ge/Bin/TransY = 0 cm
+d:Ge/Bin/TransZ   = Ge/Bin/ZeroDepth - Ge/Bin/BinDepth cm
+i:Ge/Bin/XBins = 1
+i:Ge/Bin/YBins = 1
+i:Ge/Bin/ZBins = 1
+s:Ge/Bin/Color    = "red"
+b:Ge/Bin/IsParallel = "True"
+
+#s:Sc/DoseAtPhantom/Quantity = "DoseToMedium"
+#s:Sc/DoseAtPhantom/Component = "Phantom"
+#s:Sc/DoseAtPhantom/IfOutputFileAlreadyExists = "Overwrite"
+#b:Sc/DoseAtPhantom/OutputToConsole = "True"
+
+
+s:Sc/Scorer/Quantity    = "TsYScorer"
+s:Sc/Scorer/Component   = "Bin"
+#
+# Mandatory parameters
+i:Sc/Scorer/GeometryNumber            = 3 #Voxel-based Geomtery
+i:Sc/Scorer/NumberOfHistoriesInRun    = So/Example/NumberOfHistoriesInRun
+d:Sc/Scorer/SensitiveVolumeRadius     = 1 um      # radius of sensitive volume (except for silicon microdosimeter)
+d:Sc/Scorer/TissueEquivalentRadius    = 1 um      # radius of equivalent size of tissue equivalent volume (to calculate mean chord length): Geo 1 and 2
+d:Sc/Scorer/MeanPathLength           = 1 um        # Mean path length for SOI detector and Voxel-based: Geo 2 and 3
+d:Sc/Scorer/TransX                    = Ge/Phantom/TransX + Ge/Bin/TransX mm         # x position of sensitive volume from world center
+d:Sc/Scorer/TransY                    = Ge/Phantom/TransY + Ge/Bin/TransY mm         # y position of sensitive volume from world center
+d:Sc/Scorer/TransZ                    = Ge/Phantom/TransZ + Ge/Bin/TransZ mm     # y position of sensitive volume from world center
+s:Sc/Scorer/OutputType                = "ASCII"       # OutputType must be ASCII, Binary or ROOT (unit: keV/um)
+s:Sc/Scorer/IfOutputFileAlreadyExists = "Overwrite" 
+#
+# Optional parameters
+u:Sc/Scorer/LinealEnergyLowerlimit      = 0.01         # in unit of keV/um
+u:Sc/Scorer/LinealEnergyUpperlimit     = 10000        # in unit of keV/um  
+b:Sc/Scorer/IncludeFrequencyMeanLinealEnergy   = "True"
+b:Sc/Scorer/IncludeDoseMeanLinealEnergy   = "True"
+b:Sc/Scorer/GetRBEWithBiologicalWeightFunction = "False"
+b:Sc/Scorer/GetRBEWithMKModel = "False"
+b:Sc/Scorer/GetStatisticInfo =  "False"
+i:Sc/Scorer/SpectrumUpdateTimes = 100
+
+
+s:So/Example/Type                     = "Beam"
+s:So/Example/Component                = "BeamPosition"
+s:So/Example/BeamParticle             = "proton"
+d:So/Example/BeamEnergy               = 236.1 MeV
+u:So/Example/BeamEnergySpread         = 0.1
+s:So/Example/BeamPositionDistribution = "Gaussian"
+s:So/Example/BeamPositionCutoffShape  = "Ellipse"
+d:So/Example/BeamPositionCutoffX      = 10. cm
+d:So/Example/BeamPositionCutoffY      = 10. cm
+d:So/Example/BeamPositionSpreadX      = 0.065 cm
+d:So/Example/BeamPositionSpreadY      = 0.065 cm
+s:So/Example/BeamAngularDistribution  = "Gaussian"
+d:So/Example/BeamAngularCutoffX       = 90. deg
+d:So/Example/BeamAngularCutoffY       = 90. deg
+d:So/Example/BeamAngularSpreadX       = 0.0032 rad
+d:So/Example/BeamAngularSpreadY       = 0.0032 rad
+i:So/Example/NumberOfHistoriesInRun   = 100000
+i:Ts/ShowHistoryCountAtInterval =  10
+
+i:Ts/NumberOfThreads = 0
+
+#s:Gr/ViewA/Type                            = "OpenGL"
+#b:Ts/PauseBeforeQuit = "True"
