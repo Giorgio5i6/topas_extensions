@@ -85,7 +85,13 @@ TsYScorer::TsYScorer(TsParameterManager* pM, TsMaterialManager* mM, TsGeometryMa
 			SVheight=fPm->GetDoubleParameter(GetFullParmName("SensitiveVolumeHalfLength"),"Length");
 	}
 
-
+	if(GeoNo == 3)
+	{
+		SVheight = SVradius;
+		if(fPm->ParameterExists(GetFullParmName("SensitiveVolumeHalfLength")))
+			SVheight=fPm->GetDoubleParameter(GetFullParmName("SensitiveVolumeHalfLength"),"Length");
+	}
+	
 	// *************************** optional parameters ***************************
 	ylimitL = 0 ;  // in unit of keV/um
 	if ( fPm->ParameterExists(GetFullParmName("LinealEnergyLowerlimit")) ) {
@@ -140,11 +146,11 @@ TsYScorer::TsYScorer(TsParameterManager* pM, TsMaterialManager* mM, TsGeometryMa
 
 	if(GeoNo == 0 || GeoNo == 1)
 		fMeanChordLength = 4.*TEradius/3;
-	else if (GeoNo ==2)
+	else if (GeoNo ==2 || GeoNo ==3)
 	{
 		MeanPathLength = fPm->GetDoubleParameter(GetFullParmName("MeanPathLength"),"Length");
 		fMeanChordLength = MeanPathLength;
-	}   
+	}
 	else
 	{
 		G4cout<<"Error: The detector is not supported yet."<< G4endl;  
@@ -156,7 +162,8 @@ TsYScorer::TsYScorer(TsParameterManager* pM, TsMaterialManager* mM, TsGeometryMa
 	G4cout << "Detector type : ";
 	if (GeoNo ==0 ) G4cout << "spherical TEPC "<< G4endl; 
 	if (GeoNo ==1 ) G4cout << "cylindrical TEPC "<< G4endl; 
-	if (GeoNo ==2 ) G4cout << "silicon microdosimeter "<< G4endl; 
+	if (GeoNo ==2 ) G4cout << "silicon microdosimeter "<< G4endl;
+	if (GeoNo == 3) G4cout << "Voxel-like microdosimeter "<< G4endl;
 	G4cout << "Radius of sensitive volume =" << SVradius/um << " um" << G4endl;   
 	if(GeoNo ==1 )
 		G4cout << "Height of sensitive volume =" << SVheight/um << " um" << G4endl; 
@@ -383,10 +390,38 @@ void TsYScorer::AccumulateEvent()
 					PushBackData(EdepInEvent_Particle);
 			}
 
-		}  // End of silicon microdosimeter array   
+		}  // End of silicon microdosimeter array 
+
+
+		else if(GeoNo == 3)
+		{
+			G4ThreeVector CenterPos(SphereCenterX,SphereCenterY,SphereCenterZ);
+			G4double epsilon = 0;
+
+			for ( G4int i=0; i<nofHits; i++ )
+			{
+				if ((*fHitsCollection)[i]->GetIncidentEnergy()>0)
+					Einc = (*fHitsCollection)[i]->GetIncidentEnergy();
+
+				G4ThreeVector localPos = (*fHitsCollection)[i]->GetPos();                                  
+				if (
+					((localPos.z()-CenterPos.z()) * (localPos.z()-CenterPos.z()) < 1.00001*SVheight*SVheight) // Voxel Depth along z axis
+				   )
+				{
+					G4double edep = (*fHitsCollection)[i]->GetEdep();
+					G4int flag = (*fHitsCollection)[i]->GetParticleFlag();
+					EdepInEvent_Particle[flag] += edep;  // save different particle edep
+					EdepInEvent_Particle[9] += edep;     // save total particle edep
+				}  
+			}
+
+			if ( EdepInEvent_Particle[9]!=0)
+				PushBackData(EdepInEvent_Particle);
+
+		}  
 
 	} // MUST BE HITS
-	// initialization of fHitsCollection for every single event
+	  // initialization of fHitsCollection for every single event
 
 	delete fHitsCollection;
 	fHitsCollection = new TsTrackerHitsCollection();
